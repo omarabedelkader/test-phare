@@ -6,7 +6,8 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: write       # needed to create tags + releases
+  pull-requests: write  # needed to create branches
 
 jobs:
   release:
@@ -14,18 +15,43 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch tags and history
 
-      - name: Generate unique version
-        id: version
+      # 1) Determine next semantic version
+      - name: Calculate next semantic version
+        id: semver
+        uses: rawmb/git-tag-bump@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Current tag is read from tags; bump type can be determined via commit messages
+          # Default bump is "patch" if nothing else is found
+        # This action outputs:
+        # - next_version: e.g. 1.0.1
+        # - new_tag: the full tag like "v1.0.1"
+
+      # 2) Create Git tag for the new version
+      - name: Tag repo
         run: |
-          VERSION=v$(date +'%Y.%m.%d.%H%M%S')-${GITHUB_SHA::7}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          git tag v${{ steps.semver.outputs.next_version }}
+          git push origin v${{ steps.semver.outputs.next_version }}
 
+      # 3) GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Auto Release ${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.semver.outputs.next_version }}
+          name: Release v${{ steps.semver.outputs.next_version }}
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4) Optional: Create branch on major release
+      - name: Create branch on major releases
+        if: startsWith(steps.semver.outputs.next_version, '${{ steps.semver.outputs.next_version.split(\".\")[0] }}.0.0')
+        run: |
+          BRANCH=release-v${{ steps.semver.outputs.next_version }}
+          git checkout -b $BRANCH
+          git push origin $BRANCH
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
