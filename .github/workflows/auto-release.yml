@@ -17,15 +17,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Create a semantic-release config that DOES NOT use @semantic-release/npm
-      - name: Write semantic-release config (no npm)
+      # Correct semantic-release config with proper breaking-change detection
+      - name: Write semantic-release config (FINAL FIX)
         run: |
           cat > .releaserc.json << 'JSON'
           {
             "branches": ["main"],
             "tagFormat": "v${version}",
             "plugins": [
-              "@semantic-release/commit-analyzer",
+              ["@semantic-release/commit-analyzer", {
+                "preset": "conventionalcommits",
+                "releaseRules": [
+                  { "breaking": true, "release": "major" },
+                  { "type": "feat", "release": "minor" },
+                  { "type": "fix",  "release": "patch" }
+                ]
+              }],
               "@semantic-release/release-notes-generator",
               ["@semantic-release/github", {
                 "successComment": false,
@@ -41,16 +48,15 @@ jobs:
         with:
           semantic_version: 24
           repository_url: https://github.com/${{ github.repository }}
-          # install only the plugins we actually use (no npm plugin)
           extra_plugins: |
             @semantic-release/commit-analyzer@^13
+            conventional-changelog-conventionalcommits@^7
             @semantic-release/release-notes-generator@^14
             @semantic-release/github@^11
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Create branch when version is X.0.0 (major release)
-      # Branch name == tag name (e.g. v1.0.0)
       - name: Create branch for major releases (vX.0.0)
         if: >
           steps.semantic.outputs.new_release_published == 'true' &&
