@@ -39,6 +39,12 @@ AIDFSNode >> previousNode1 [
 ]
 
 { #category : 'accessing' }
+AIDFSNode >> previousNode2 [
+
+	^ previousNode
+]
+
+{ #category : 'accessing' }
 AIDFSNode >> previousNode: aNode [
 
 	previousNode := aNode
