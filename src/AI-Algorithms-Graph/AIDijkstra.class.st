@@ -106,6 +106,21 @@ AIDijkstra >> reconstructPath4 [
 	^ path
 ]
 
+{ #category : 'backtracking' }
+AIDijkstra >> reconstructPath5 [
+
+	| path previous |
+	"If no path exists between the start and the end node"
+	end pathDistance = Float infinity ifTrue: [ ^ #(  ) ].
+	path := LinkedList empty.
+	previous := end.
+	path addFirst: end model.
+	[ previous = start ] whileFalse: [
+		previous := previous previousNode.
+		path addFirst: previous model ].
+	^ path
+]
+
 { #category : 'actions' }
 AIDijkstra >> removeMostPromisingPair: aPriorityQueue [
 
