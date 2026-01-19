@@ -1,0 +1,9 @@
+SmalltalkCISpec {
+  #loading : [
+    SCIMetacelloLoadSpec {
+      #baseline : 'AIGraphAlgorithms',
+      #directory : 'src',
+      #platforms : [ #pharo ]
+    }
+  ]
+}
