@@ -50,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Create branch when version is X.0.0 (major release)
-      # Branch name == tag name (e.g. v2.0.0)
+      # Branch name == tag name (e.g. v1.0.0)
       - name: Create branch for major releases (vX.0.0)
         if: >
           steps.semantic.outputs.new_release_published == 'true' &&
