@@ -1,0 +1,51 @@
+name: Auto Release on Main (SemVer + Release + Major Branch)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node (required by semantic-release)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # This step:
+      # - analyzes commits (Conventional Commits) -> decides major/minor/patch
+      # - creates tag like v1.0.0
+      # - creates GitHub Release + release notes
+      - name: Semantic Release (tag + GitHub release)
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v6
+        with:
+          semantic_version: 24
+          # default tag format is v{version}; keeping it explicit is fine
+          tag_format: v${version}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Create a branch ONLY when a new release is published AND it's a major release (x.0.0)
+      # Branch name will be exactly the tag, like "v2.0.0"
+      - name: Create branch for major release (vX.0.0)
+        if: >
+          steps.semantic.outputs.new_release_published == 'true' &&
+          steps.semantic.outputs.new_release_minor_version == '0' &&
+          steps.semantic.outputs.new_release_patch_version == '0'
+        run: |
+          TAG="v${{ steps.semantic.outputs.new_release_version }}"
+          echo "Major release detected: $TAG"
+
+          # Create remote branch named exactly like the tag, pointing to the tag commit
+          git push origin "refs/tags/$TAG:refs/heads/$TAG"
