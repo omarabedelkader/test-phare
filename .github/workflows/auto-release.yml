@@ -17,9 +17,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # CRITICAL FIX:
-      # Proper conventional-commit parsing + breaking change detection
-      - name: Write semantic-release config (FIXED)
+      # Correct semantic-release config with proper breaking-change detection
+      - name: Write semantic-release config (FINAL FIX)
         run: |
           cat > .releaserc.json << 'JSON'
           {
@@ -51,6 +50,7 @@ jobs:
           repository_url: https://github.com/${{ github.repository }}
           extra_plugins: |
             @semantic-release/commit-analyzer@^13
+            conventional-changelog-conventionalcommits@^7
             @semantic-release/release-notes-generator@^14
             @semantic-release/github@^11
         env:
